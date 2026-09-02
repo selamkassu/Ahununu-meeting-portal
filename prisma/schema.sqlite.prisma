@@ -1,0 +1,194 @@
+// Ahununu Logistics - Meeting Management Portal
+// Prisma schema — LOCAL DEV convenience copy (SQLite, zero setup).
+// Identical models to schema.prisma. Use this to run the app instantly
+// without installing SQL Server. Swap back to schema.prisma for production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Core organizational structure ----------
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users        User[]
+  meetings     Meeting[]
+  actionItems  ActionItem[]
+}
+
+// Role: SUPER_ADMIN | MANAGEMENT | DEPARTMENT_MANAGER | MEETING_ORGANIZER | EMPLOYEE
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("EMPLOYEE")
+  jobTitle     String?
+  avatarColor  String   @default("#0F2A4A")
+  isActive     Boolean  @default(true)
+  departmentId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department        Department?          @relation(fields: [departmentId], references: [id])
+  organizedMeetings Meeting[]            @relation("MeetingOrganizer")
+  participations    MeetingParticipant[]
+  assignedActions   ActionItem[]         @relation("ActionAssignee")
+  minutesAuthored   MeetingMinutes[]
+  notifications     Notification[]
+  documents         Document[]
+}
+
+// ---------- Meetings ----------
+
+// Status: SCHEDULED | IN_PROGRESS | COMPLETED | CANCELLED
+// Priority: LOW | MEDIUM | HIGH | CRITICAL
+model Meeting {
+  id             String   @id @default(cuid())
+  code           String   @unique // human tracking code, e.g. MTG-2026-0148
+  title          String
+  description    String?
+  date           DateTime
+  startTime      String // "09:00"
+  endTime        String // "10:00"
+  location       String?
+  onlineLink     String?
+  priority       String   @default("MEDIUM")
+  status         String   @default("SCHEDULED")
+  organizerId    String
+  departmentId   String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organizer    User                 @relation("MeetingOrganizer", fields: [organizerId], references: [id])
+  department   Department           @relation(fields: [departmentId], references: [id])
+  participants MeetingParticipant[]
+  agendaItems  AgendaItem[]
+  minutes      MeetingMinutes[]
+  decisions    Decision[]
+  actionItems  ActionItem[]
+  documents    Document[]
+}
+
+// Status: INVITED | ACCEPTED | DECLINED | ATTENDED | ABSENT
+model MeetingParticipant {
+  id        String   @id @default(cuid())
+  meetingId String
+  userId    String
+  status    String   @default("INVITED")
+  isRequired Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([meetingId, userId])
+}
+
+// Status: PENDING | DISCUSSED | DEFERRED
+model AgendaItem {
+  id          String   @id @default(cuid())
+  meetingId   String
+  order       Int      @default(0)
+  title       String
+  description String?
+  presenter   String?
+  durationMin Int      @default(15)
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+}
+
+model MeetingMinutes {
+  id         String   @id @default(cuid())
+  meetingId  String
+  content    String
+  recordedById String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  meeting    Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  recordedBy User    @relation(fields: [recordedById], references: [id])
+}
+
+// Status: OPEN | IMPLEMENTED | REVERSED
+model Decision {
+  id           String   @id @default(cuid())
+  meetingId    String
+  code         String   @unique // e.g. DEC-2026-0091
+  title        String
+  description  String?
+  decisionDate DateTime @default(now())
+  status       String   @default("OPEN")
+  createdAt    DateTime @default(now())
+
+  meeting     Meeting      @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  actionItems ActionItem[]
+}
+
+// Status: PENDING | IN_PROGRESS | COMPLETED | CANCELLED  (overdue is derived: status != COMPLETED && deadline < now)
+// Priority: LOW | MEDIUM | HIGH | CRITICAL
+model ActionItem {
+  id             String    @id @default(cuid())
+  code           String    @unique // e.g. ACT-2026-0392
+  meetingId      String
+  decisionId     String?
+  title          String
+  description    String?
+  assignedToId   String
+  departmentId   String
+  priority       String    @default("MEDIUM")
+  status         String    @default("PENDING")
+  progressPercent Int      @default(0)
+  deadline       DateTime
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  meeting    Meeting     @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  decision   Decision?   @relation(fields: [decisionId], references: [id])
+  assignedTo User        @relation("ActionAssignee", fields: [assignedToId], references: [id])
+  department Department  @relation(fields: [departmentId], references: [id])
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  meetingId  String
+  fileName   String
+  fileType   String   @default("application/octet-stream")
+  fileSize   Int      @default(0)
+  storedName String?
+  filePath   String?
+  uploadedById String
+  createdAt  DateTime @default(now())
+
+  meeting    Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  uploadedBy User    @relation(fields: [uploadedById], references: [id])
+}
+
+// Type: MEETING_INVITE | ACTION_ASSIGNED | ACTION_DUE_SOON | ACTION_OVERDUE | DECISION_LOGGED | MEETING_REMINDER
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
