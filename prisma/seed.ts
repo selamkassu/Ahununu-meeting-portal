@@ -42,39 +42,75 @@ async function main() {
   const passwordHash = await bcrypt.hash("Ahununu@123", 10);
 
   const userDefs = [
-    { name: "Dawit Bekele", email: "dawit.bekele@ahununulogistics.com", role: "SUPER_ADMIN", dept: "IT", title: "Systems Administrator" },
-    { name: "Selamawit Tesfaye", email: "selamawit.tesfaye@ahununulogistics.com", role: "MANAGEMENT", dept: "MGT", title: "Chief Executive Officer" },
-    { name: "Yonas Girma", email: "yonas.girma@ahununulogistics.com", role: "MANAGEMENT", dept: "MGT", title: "Chief Operating Officer" },
-    { name: "Hana Alemu", email: "hana.alemu@ahununulogistics.com", role: "DEPARTMENT_MANAGER", dept: "OPS", title: "Operations Manager" },
-    { name: "Bereket Mulu", email: "bereket.mulu@ahununulogistics.com", role: "DEPARTMENT_MANAGER", dept: "LOG", title: "Logistics Manager" },
-    { name: "Tigist Worku", email: "tigist.worku@ahununulogistics.com", role: "DEPARTMENT_MANAGER", dept: "FIN", title: "Finance Manager" },
-    { name: "Robel Kassa", email: "robel.kassa@ahununulogistics.com", role: "DEPARTMENT_MANAGER", dept: "WH", title: "Warehouse Manager" },
-    { name: "Meron Fikadu", email: "meron.fikadu@ahununulogistics.com", role: "DEPARTMENT_MANAGER", dept: "HR", title: "HR Manager" },
-    { name: "Abenezer Solomon", email: "abenezer.solomon@ahununulogistics.com", role: "MEETING_ORGANIZER", dept: "MGT", title: "Executive Assistant" },
-    { name: "Rahel Assefa", email: "rahel.assefa@ahununulogistics.com", role: "DEPARTMENT_MANAGER", dept: "CS", title: "Customer Service Manager" },
-    { name: "Kaleab Teshome", email: "kaleab.teshome@ahununulogistics.com", role: "DEPARTMENT_MANAGER", dept: "S&M", title: "Sales & Marketing Manager" },
-    { name: "Liya Desta", email: "liya.desta@ahununulogistics.com", role: "EMPLOYEE", dept: "IT", title: "Network Engineer" },
-    { name: "Samuel Wolde", email: "samuel.wolde@ahununulogistics.com", role: "EMPLOYEE", dept: "OPS", title: "Fleet Dispatcher" },
-    { name: "Eyerusalem Getachew", email: "eyerusalem.getachew@ahununulogistics.com", role: "EMPLOYEE", dept: "LOG", title: "Freight Coordinator" },
-    { name: "Nathnael Yohannes", email: "nathnael.yohannes@ahununulogistics.com", role: "EMPLOYEE", dept: "WH", title: "Inventory Officer" },
-    { name: "Firehiwot Abera", email: "firehiwot.abera@ahununulogistics.com", role: "EMPLOYEE", dept: "FIN", title: "Accountant" },
+    { name: "Dawit Bekele", email: "dawit.bekele@ahununulogistics.com", role: "SYSTEM_ADMIN", dept: "IT", title: "Systems Administrator" },
+    { name: "Selamawit Tesfaye", email: "selamawit.tesfaye@ahununulogistics.com", role: "DEPARTMENT_HEAD", dept: "MGT", title: "Chief Executive Officer" },
+    { name: "Yonas Girma", email: "yonas.girma@ahununulogistics.com", role: "DEPARTMENT_HEAD", dept: "MGT", title: "Chief Operating Officer" },
+    { name: "Hana Alemu", email: "hana.alemu@ahununulogistics.com", role: "DEPARTMENT_HEAD", dept: "OPS", title: "Operations Manager" },
+    { name: "Bereket Mulu", email: "bereket.mulu@ahununulogistics.com", role: "DEPARTMENT_HEAD", dept: "LOG", title: "Logistics Manager" },
+    { name: "Tigist Worku", email: "tigist.worku@ahununulogistics.com", role: "DEPARTMENT_HEAD", dept: "FIN", title: "Finance Manager" },
+    { name: "Robel Kassa", email: "robel.kassa@ahununulogistics.com", role: "DEPARTMENT_HEAD", dept: "WH", title: "Warehouse Manager" },
+    { name: "Meron Fikadu", email: "meron.fikadu@ahununulogistics.com", role: "DEPARTMENT_HEAD", dept: "HR", title: "HR Manager" },
+    { name: "Abenezer Solomon", email: "abenezer.solomon@ahununulogistics.com", role: "MEETING_SECRETARY", dept: "MGT", title: "Executive Assistant" },
+    { name: "Rahel Assefa", email: "rahel.assefa@ahununulogistics.com", role: "DEPARTMENT_HEAD", dept: "CS", title: "Customer Service Manager" },
+    { name: "Kaleab Teshome", email: "kaleab.teshome@ahununulogistics.com", role: "DEPARTMENT_HEAD", dept: "S&M", title: "Sales & Marketing Manager" },
+    { name: "Liya Desta", email: "liya.desta@ahununulogistics.com", role: "PARTICIPANT", dept: "IT", title: "Network Engineer" },
+    { name: "Samuel Wolde", email: "samuel.wolde@ahununulogistics.com", role: "PARTICIPANT", dept: "OPS", title: "Fleet Dispatcher" },
+    { name: "Eyerusalem Getachew", email: "eyerusalem.getachew@ahununulogistics.com", role: "PARTICIPANT", dept: "LOG", title: "Freight Coordinator" },
+    { name: "Nathnael Yohannes", email: "nathnael.yohannes@ahununulogistics.com", role: "PARTICIPANT", dept: "WH", title: "Inventory Officer" },
+    { name: "Firehiwot Abera", email: "firehiwot.abera@ahununulogistics.com", role: "PARTICIPANT", dept: "FIN", title: "Accountant" },
   ];
+
+  const phoneList = [
+    "+251 91 123 4567",
+    "+251 91 234 5678",
+    "+251 91 345 6789",
+    "+251 91 456 7890",
+    "+251 91 567 8901",
+    "+251 91 678 9012",
+    "+251 91 789 0123",
+    "+251 91 890 1234",
+    "+251 91 901 2345",
+    "+251 92 012 3456",
+    "+251 92 123 4567",
+    "+251 92 234 5678",
+    "+251 92 345 6789",
+    "+251 92 456 7890",
+    "+251 92 567 8901",
+    "+251 92 678 9012",
+  ];
+
+  const rolePermissionsMap: Record<string, string[]> = {
+    SYSTEM_ADMIN: ["Manage Users", "Manage Roles", "Manage Permissions", "Manage Departments"],
+    MEETING_SECRETARY: ["Create / Manage Meetings", "Manage Agenda", "Manage Participants", "Manage Documents"],
+    DEPARTMENT_HEAD: ["View Department Meetings", "Manage Department Action Items", "Monitor Action Status", "Log Decisions"],
+    PARTICIPANT: ["View Assigned Meetings", "View Agenda", "View Assigned Action Items", "Update Assigned Actions"],
+  };
 
   const colors = ["#0F2A4A", "#1F6F5C", "#B4571C", "#3B5166", "#7A4FA3", "#1F9D63", "#C0392B", "#2E7BB0"];
   const users = await Promise.all(
-    userDefs.map((u, idx) =>
-      prisma.user.create({
+    userDefs.map((u, idx) => {
+      // Set one user suspended and one deactivated for demonstrating lifecycle states
+      let status = "ACTIVE";
+      if (u.name === "Samuel Wolde") status = "SUSPENDED";
+      if (u.name === "Firehiwot Abera") status = "DEACTIVATED";
+
+      return prisma.user.create({
         data: {
           name: u.name,
           email: u.email,
+          phone: phoneList[idx % phoneList.length],
           passwordHash,
           role: u.role,
+          status,
+          isActive: status === "ACTIVE",
+          permissions: JSON.stringify(rolePermissionsMap[u.role] || []),
+          responsibilities: `Operational oversight and execution of ${u.title} responsibilities in ${u.dept} department.`,
           jobTitle: u.title,
           avatarColor: colors[idx % colors.length],
           departmentId: byCode[u.dept].id,
         },
-      })
-    )
+      });
+    })
   );
   const byEmail = Object.fromEntries(users.map((u) => [u.email, u]));
   const ceo = byEmail["selamawit.tesfaye@ahununulogistics.com"];
@@ -352,11 +388,10 @@ async function main() {
   console.log("Seed complete.");
   console.log("");
   console.log("Sign in with any seeded user, password: Ahununu@123");
-  console.log("  Super Admin      : dawit.bekele@ahununulogistics.com");
-  console.log("  Management (CEO) : selamawit.tesfaye@ahununulogistics.com");
-  console.log("  Dept. Manager    : hana.alemu@ahununulogistics.com");
-  console.log("  Meeting Organizer: abenezer.solomon@ahununulogistics.com");
-  console.log("  Employee         : samuel.wolde@ahununulogistics.com");
+  console.log("  System Admin      : dawit.bekele@ahununulogistics.com");
+  console.log("  Department Head   : hana.alemu@ahununulogistics.com");
+  console.log("  Meeting Secretary : abenezer.solomon@ahununulogistics.com");
+  console.log("  Participant       : samuel.wolde@ahununulogistics.com");
 }
 
 main()

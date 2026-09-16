@@ -34,19 +34,23 @@ model Department {
   actionItems  ActionItem[]
 }
 
-// Role: SUPER_ADMIN | MANAGEMENT | DEPARTMENT_MANAGER | MEETING_ORGANIZER | EMPLOYEE
+// Role: SYSTEM_ADMIN | MEETING_SECRETARY | DEPARTMENT_HEAD | PARTICIPANT
 model User {
   id           String   @id @default(cuid())
   name         String
   email        String   @unique
   passwordHash String
-  role         String   @default("EMPLOYEE")
+  role         String   @default("PARTICIPANT")
   jobTitle     String?
   avatarColor  String   @default("#0F2A4A")
-  isActive     Boolean  @default(true)
-  departmentId String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isActive         Boolean  @default(true)
+  status           String   @default("ACTIVE") // ACTIVE | SUSPENDED | DEACTIVATED
+  phone            String?
+  permissions      String?  // JSON string array of permission codes/strings
+  responsibilities String?  // Text description of responsibilities
+  departmentId     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   department        Department?          @relation(fields: [departmentId], references: [id])
   organizedMeetings Meeting[]            @relation("MeetingOrganizer")

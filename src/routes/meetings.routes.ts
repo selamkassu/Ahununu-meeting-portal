@@ -102,8 +102,8 @@ const createSchema = z.object({
     .array(
       z.object({
         title: z.string().min(2),
-        description: z.string().optional(),
-        presenter: z.string().optional(),
+        description: z.string().nullable().optional(),
+        presenter: z.string().nullable().optional(),
         durationMin: z.number().optional(),
       }),
     )
@@ -144,8 +144,8 @@ router.post(
           create: data.agendaItems.map((a, idx) => ({
             order: idx,
             title: a.title,
-            description: a.description,
-            presenter: a.presenter,
+            description: a.description?.trim() || null,
+            presenter: a.presenter?.trim() || null,
             durationMin: a.durationMin ?? 15,
           })),
         },
@@ -415,8 +415,8 @@ router.post(
   async (req, res) => {
     const schema = z.object({
       title: z.string().min(2),
-      description: z.string().optional(),
-      presenter: z.string().optional(),
+      description: z.string().nullable().optional(),
+      presenter: z.string().nullable().optional(),
       durationMin: z.number().optional(),
     });
     const parsed = schema.safeParse(req.body);
@@ -426,7 +426,14 @@ router.post(
       where: { meetingId: req.params.id },
     });
     const item = await prisma.agendaItem.create({
-      data: { ...parsed.data, order: count, meetingId: req.params.id },
+      data: {
+        title: parsed.data.title,
+        description: parsed.data.description?.trim() || null,
+        presenter: parsed.data.presenter?.trim() || null,
+        durationMin: parsed.data.durationMin ?? 15,
+        order: count,
+        meetingId: req.params.id,
+      },
     });
     res.status(201).json(item);
   },
@@ -438,8 +445,8 @@ router.put(
   async (req, res) => {
     const schema = z.object({
       title: z.string().min(2).optional(),
-      description: z.string().optional(),
-      presenter: z.string().optional(),
+      description: z.string().nullable().optional(),
+      presenter: z.string().nullable().optional(),
       durationMin: z.number().optional(),
       status: z.enum(AGENDA_STATUSES).optional(),
       order: z.number().optional(),
@@ -448,9 +455,21 @@ router.put(
     if (!parsed.success)
       return res.status(400).json({ error: "Invalid agenda update." });
     try {
+      const dataToUpdate: any = {};
+      if (parsed.data.title !== undefined) dataToUpdate.title = parsed.data.title;
+      if (parsed.data.description !== undefined) {
+        dataToUpdate.description = parsed.data.description?.trim() || null;
+      }
+      if (parsed.data.presenter !== undefined) {
+        dataToUpdate.presenter = parsed.data.presenter?.trim() || null;
+      }
+      if (parsed.data.durationMin !== undefined) dataToUpdate.durationMin = parsed.data.durationMin;
+      if (parsed.data.status !== undefined) dataToUpdate.status = parsed.data.status;
+      if (parsed.data.order !== undefined) dataToUpdate.order = parsed.data.order;
+
       const item = await prisma.agendaItem.update({
         where: { id: req.params.agendaId },
-        data: parsed.data,
+        data: dataToUpdate,
       });
       res.json(item);
     } catch {

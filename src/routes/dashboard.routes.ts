@@ -18,9 +18,10 @@ function endOfDay(d: Date) {
 }
 
 router.get("/stats", async (_req, res) => {
-  const now = new Date();
-  const today0 = startOfDay(now);
-  const today1 = endOfDay(now);
+  try {
+    const now = new Date();
+    const today0 = startOfDay(now);
+    const today1 = endOfDay(now);
 
   const [
     totalMeetings,
@@ -99,25 +100,29 @@ router.get("/stats", async (_req, res) => {
     })
     .slice(0, 25);
 
-  res.json({
-    cards: {
-      totalMeetings,
-      todaysMeetings,
-      upcomingMeetings,
-      completedMeetings,
-      pendingActionItems,
-      overdueActionItems,
-      completedActionItems,
-      pendingDecisions,
-    },
-    charts: {
-      monthlyMeetings: monthly,
-      actionItemStatus: statusBuckets,
-      departmentPerformance,
-      meetingCompletionRate,
-    },
-    accountability,
-  });
+    res.json({
+      cards: {
+        totalMeetings,
+        todaysMeetings,
+        upcomingMeetings,
+        completedMeetings,
+        pendingActionItems,
+        overdueActionItems,
+        completedActionItems,
+        pendingDecisions,
+      },
+      charts: {
+        monthlyMeetings: monthly,
+        actionItemStatus: statusBuckets,
+        departmentPerformance,
+        meetingCompletionRate,
+      },
+      accountability,
+    });
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+    res.status(500).json({ error: "Failed to load dashboard stats." });
+  }
 });
 
 export default router;
